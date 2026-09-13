@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+<rect width="900" height="360" fill="#ffffff"/>
+<text x="40" y="48" font-size="26" font-family="Arial, Microsoft YaHei" font-weight="bold">cProfile 核心函数性能对比</text>
+<text x="40" y="78" font-size="15" font-family="Arial, Microsoft YaHei" fill="#555">大型中文文本，calculate_similarity 累计耗时（秒，越低越好）</text>
+<text x="40" y="142" font-size="18" font-family="Arial, Microsoft YaHei">优化前</text>
+<rect x="150" y="112" width="560.0" height="45" rx="5" fill="#e76f51"/>
+<text x="725.0" y="142" font-size="18" font-family="Arial">0.3110 s</text>
+<text x="40" y="222" font-size="18" font-family="Arial, Microsoft YaHei">优化后</text>
+<rect x="150" y="192" width="304.7" height="45" rx="5" fill="#2a9d8f"/>
+<text x="469.7" y="222" font-size="18" font-family="Arial">0.1692 s</text>
+<text x="40" y="270" font-size="20" font-family="Arial, Microsoft YaHei" fill="#264653">耗时下降 45.6% / 特征生成次数减半</text>
+</svg>

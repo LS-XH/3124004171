@@ -1,7 +1,7 @@
 """论文相似度计算模块。
 
-算法融合子词词频余弦相似度与字符二元组 Dice 系数：前者关注局部内容和
-词频分布，后者降低少量增删改对结果的影响。两部分都只需线性扫描。
+算法在同一份字符二元组特征上融合词频余弦相似度与 Dice 系数：前者关注
+频率分布，后者关注重合数量。复用特征避免重复切分，两部分都只需线性扫描。
 """
 
 from __future__ import annotations
@@ -84,13 +84,9 @@ def calculate_similarity(original: str, suspect: str) -> float:
     if not normalized_original or not normalized_suspect:
         return 1.0 if normalized_original == normalized_suspect else 0.0
 
-    token_score = _cosine_similarity(
-        Counter(tokenize(normalized_original)),
-        Counter(tokenize(normalized_suspect)),
-    )
-    bigram_score = _dice_similarity(
-        Counter(_ngrams(normalized_original)),
-        Counter(_ngrams(normalized_suspect)),
-    )
+    original_features = Counter(_ngrams(normalized_original))
+    suspect_features = Counter(_ngrams(normalized_suspect))
+    token_score = _cosine_similarity(original_features, suspect_features)
+    bigram_score = _dice_similarity(original_features, suspect_features)
     score = _TOKEN_WEIGHT * token_score + _BIGRAM_WEIGHT * bigram_score
     return min(1.0, max(0.0, score))

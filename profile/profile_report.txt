@@ -1,0 +1,6 @@
+cProfile 性能分析报告
+优化前 calculate_similarity 累计耗时: 0.3110 s
+优化后 calculate_similarity 累计耗时: 0.1692 s
+耗时下降: 45.6%
+优化前热点: Counter 构造与 _ngrams 生成器（重复构造四份特征）
+优化措施: 两种相似度复用同一对二元组 Counter，避免重复切分。
