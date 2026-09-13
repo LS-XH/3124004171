@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers --cov=. --cov-branch --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+

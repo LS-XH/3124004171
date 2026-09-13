@@ -10,8 +10,8 @@ import math
 import re
 import unicodedata
 from collections import Counter
+from collections.abc import Hashable, Iterable
 from pathlib import Path
-from typing import Hashable, Iterable
 
 _MEANINGFUL_TEXT = re.compile(r"[\w\u3400-\u4dbf\u4e00-\u9fff]+", re.UNICODE)
 _TEXT_RUNS = re.compile(r"[a-z0-9_]+|[\u3400-\u4dbf\u4e00-\u9fff]+", re.UNICODE)
@@ -50,9 +50,7 @@ def tokenize(text: str) -> list[str]:
     return tokens
 
 
-def _cosine_similarity(
-    left: Counter[Hashable], right: Counter[Hashable]
-) -> float:
+def _cosine_similarity(left: Counter[Hashable], right: Counter[Hashable]) -> float:
     """计算两个稀疏词频向量的余弦相似度。"""
     if not left or not right:
         return 1.0 if left == right else 0.0
