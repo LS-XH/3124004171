@@ -10,6 +10,7 @@ PROFILE_DIR = Path(__file__).resolve().parent
 
 def cumulative_time(stats: pstats.Stats, function_name: str) -> float:
     """提取指定函数的累计耗时。"""
+    # pstats 以 (文件名, 行号, 函数名) 为键，索引 3 对应累计耗时。
     matches = [
         value[3] for key, value in stats.stats.items() if key[2] == function_name
     ]
@@ -37,6 +38,7 @@ def main() -> None:
     (PROFILE_DIR / "profile_report.txt").write_text(report, encoding="utf-8")
 
     maximum = max(before_core, after_core)
+    # 以较慢的一组为满宽度，保证两根柱子的长度可以直接比较。
     before_width = 560 * before_core / maximum
     after_width = 560 * after_core / maximum
     svg = "\n".join(
