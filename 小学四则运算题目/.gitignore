@@ -1,0 +1,7 @@
+/build/
+/Myapp.jar
+/Exercises.txt
+/Answers.txt
+/Grade.txt
+*.jfr
+
