@@ -1,0 +1,34 @@
+[0.555s][info][jfr,startup] Started recording 1. No limit specified, using maxsize=250MB as default.
+[0.555s][info][jfr,startup] 
+[0.555s][info][jfr,startup] Use jcmd 44304 JFR.dump name=1 to copy recording data to file.
+iteration=1 elapsed_ms=40.257
+iteration=2 elapsed_ms=36.729
+iteration=3 elapsed_ms=30.890
+iteration=4 elapsed_ms=29.678
+iteration=5 elapsed_ms=24.217
+iteration=6 elapsed_ms=26.019
+iteration=7 elapsed_ms=25.848
+iteration=8 elapsed_ms=22.022
+iteration=9 elapsed_ms=23.417
+iteration=10 elapsed_ms=27.338
+iteration=11 elapsed_ms=25.672
+iteration=12 elapsed_ms=24.001
+iteration=13 elapsed_ms=22.219
+iteration=14 elapsed_ms=26.073
+iteration=15 elapsed_ms=20.547
+iteration=16 elapsed_ms=21.658
+iteration=17 elapsed_ms=20.865
+iteration=18 elapsed_ms=20.881
+iteration=19 elapsed_ms=20.925
+iteration=20 elapsed_ms=20.889
+iteration=21 elapsed_ms=20.885
+iteration=22 elapsed_ms=20.176
+iteration=23 elapsed_ms=20.797
+iteration=24 elapsed_ms=20.320
+iteration=25 elapsed_ms=20.285
+iteration=26 elapsed_ms=19.169
+iteration=27 elapsed_ms=18.999
+iteration=28 elapsed_ms=20.711
+iteration=29 elapsed_ms=21.283
+iteration=30 elapsed_ms=20.129
+summary warmups=10 iterations=30 count=10000 range=10 median_ms=21.471 average_ms=23.763 min_ms=18.999 max_ms=40.257

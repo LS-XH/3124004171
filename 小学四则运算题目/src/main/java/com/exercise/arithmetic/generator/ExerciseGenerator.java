@@ -82,19 +82,31 @@ public final class ExerciseGenerator {
         Fraction leftValue = left.evaluate();
         Fraction rightValue = right.evaluate();
 
+        // 减法左右值不满足约束时直接交换，比丢弃整棵已生成的子树更节省分配和重试。
         if (operator == Operator.SUBTRACT && leftValue.compareTo(rightValue) < 0) {
-            return null;
+            Expression temporaryExpression = left;
+            left = right;
+            right = temporaryExpression;
+            Fraction temporaryValue = leftValue;
+            leftValue = rightValue;
+            rightValue = temporaryValue;
         }
         if (operator == Operator.DIVIDE) {
-            if (rightValue.isZero()) {
+            if (leftValue.isZero() || rightValue.isZero() || leftValue.equals(rightValue)) {
                 return null;
             }
-            Fraction quotient = leftValue.divide(rightValue);
-            if (!quotient.isProperFraction()) {
-                return null;
+            // 将较小值放在左侧，使商天然位于 (0, 1)，避免计算后再丢弃候选。
+            if (leftValue.compareTo(rightValue) > 0) {
+                Expression temporaryExpression = left;
+                left = right;
+                right = temporaryExpression;
+                Fraction temporaryValue = leftValue;
+                leftValue = rightValue;
+                rightValue = temporaryValue;
             }
         }
-        return new BinaryExpression(left, operator, right);
+        Fraction result = operator.apply(leftValue, rightValue);
+        return BinaryExpression.withPrecomputedValue(left, operator, right, result);
     }
 
     private NumberExpression generateNumber(int range) {

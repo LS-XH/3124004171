@@ -1,6 +1,7 @@
 package com.exercise.arithmetic.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record GradeResult(List<Integer> correctNumbers, List<Integer> wrongNumbers) {
     public GradeResult {
@@ -16,7 +17,6 @@ public record GradeResult(List<Integer> correctNumbers, List<Integer> wrongNumbe
     }
 
     private String join(List<Integer> numbers) {
-        return numbers.stream().map(String::valueOf).reduce((left, right) -> left + ", " + right).orElse("");
+        return numbers.stream().map(String::valueOf).collect(Collectors.joining(", "));
     }
 }
-

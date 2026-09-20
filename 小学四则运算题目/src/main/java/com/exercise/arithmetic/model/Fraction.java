@@ -7,13 +7,17 @@ import java.util.Objects;
  * 不可变的精确分数。分母始终为正数，分子和分母始终互质。
  */
 public final class Fraction implements Comparable<Fraction> {
-    public static final Fraction ZERO = new Fraction(BigInteger.ZERO, BigInteger.ONE);
-    public static final Fraction ONE = new Fraction(BigInteger.ONE, BigInteger.ONE);
-
     private static final char MIXED_NUMBER_SEPARATOR = '\u2019';
+    private static final int NATURAL_CACHE_MAX = 100;
+    private static final Fraction[] NATURAL_CACHE = createNaturalCache();
+
+    public static final Fraction ZERO = NATURAL_CACHE[0];
+    public static final Fraction ONE = NATURAL_CACHE[1];
 
     private final BigInteger numerator;
     private final BigInteger denominator;
+    private String cachedCanonicalKey;
+    private String cachedDisplayString;
 
     public Fraction(long numerator, long denominator) {
         this(BigInteger.valueOf(numerator), BigInteger.valueOf(denominator));
@@ -31,13 +35,38 @@ public final class Fraction implements Comparable<Fraction> {
             numerator = numerator.negate();
             denominator = denominator.negate();
         }
+        // 自然数和 0 在生成任务中出现频繁；它们已经是最简分数，无需执行 gcd 和除法。
+        if (numerator.signum() == 0) {
+            this.numerator = BigInteger.ZERO;
+            this.denominator = BigInteger.ONE;
+            return;
+        }
+        if (denominator.equals(BigInteger.ONE)) {
+            this.numerator = numerator;
+            this.denominator = BigInteger.ONE;
+            return;
+        }
         BigInteger gcd = numerator.gcd(denominator);
         this.numerator = numerator.divide(gcd);
         this.denominator = denominator.divide(gcd);
     }
 
     public static Fraction of(long value) {
+        if (value >= 0 && value <= NATURAL_CACHE_MAX) {
+            return NATURAL_CACHE[(int) value];
+        }
         return new Fraction(value, 1);
+    }
+
+    private static Fraction[] createNaturalCache() {
+        Fraction[] cache = new Fraction[NATURAL_CACHE_MAX + 1];
+        for (int value = 0; value <= NATURAL_CACHE_MAX; value++) {
+            Fraction fraction = new Fraction(BigInteger.valueOf(value), BigInteger.ONE);
+            fraction.cachedCanonicalKey = value + "/1";
+            fraction.cachedDisplayString = String.valueOf(value);
+            cache[value] = fraction;
+        }
+        return cache;
     }
 
     public BigInteger numerator() {
@@ -80,24 +109,43 @@ public final class Fraction implements Comparable<Fraction> {
     }
 
     public String canonicalKey() {
-        return numerator + "/" + denominator;
+        if (cachedCanonicalKey == null) {
+            cachedCanonicalKey = numerator + "/" + denominator;
+        }
+        return cachedCanonicalKey;
     }
 
     /**
      * 按作业格式输出自然数、真分数或带分数。
      */
     public String toDisplayString() {
+        if (cachedDisplayString != null) {
+            return cachedDisplayString;
+        }
+        if (denominator.equals(BigInteger.ONE)) {
+            cachedDisplayString = numerator.toString();
+            return cachedDisplayString;
+        }
+        if (numerator.signum() > 0 && numerator.compareTo(denominator) < 0) {
+            // 真分数无需执行 divideAndRemainder，其显示形式与规范键相同。
+            cachedDisplayString = canonicalKey();
+            return cachedDisplayString;
+        }
         BigInteger[] quotientAndRemainder = numerator.divideAndRemainder(denominator);
         BigInteger whole = quotientAndRemainder[0];
         BigInteger remainder = quotientAndRemainder[1].abs();
 
         if (remainder.signum() == 0) {
-            return whole.toString();
+            cachedDisplayString = whole.toString();
+            return cachedDisplayString;
         }
         if (whole.signum() == 0) {
-            return numerator + "/" + denominator;
+            cachedDisplayString = canonicalKey();
+            return cachedDisplayString;
         }
-        return whole + String.valueOf(MIXED_NUMBER_SEPARATOR) + remainder + "/" + denominator;
+        cachedDisplayString = whole + String.valueOf(MIXED_NUMBER_SEPARATOR)
+                + remainder + "/" + denominator;
+        return cachedDisplayString;
     }
 
     @Override
@@ -127,4 +175,3 @@ public final class Fraction implements Comparable<Fraction> {
         return toDisplayString();
     }
 }
-

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">JFR 优化前后性能对比</title>
+  <desc id="desc">生成并写入一万道题，优化前后中位耗时、平均耗时、最小耗时和最大耗时的横向柱状图。</desc>
+  <rect width="900" height="520" fill="#ffffff"/>
+  <text x="450" y="38" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="24" font-weight="700" fill="#172033">生成并写入 10,000 道题：JFR 优化前后对比</text>
+  <text x="450" y="64" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#5d6678">JDK 17.0.12 · 固定随机种子 · 预热 10 次 · 测量 30 次 · 单位：ms（越低越好）</text>
+
+  <rect x="604" y="82" width="14" height="14" rx="2" fill="#5470c6"/>
+  <text x="625" y="94" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#313848">优化前</text>
+  <rect x="682" y="82" width="14" height="14" rx="2" fill="#ee7d31"/>
+  <text x="703" y="94" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="13" fill="#313848">优化后</text>
+
+  <g stroke="#dfe4ec" stroke-width="1">
+    <line x1="190" y1="105" x2="190" y2="420"/>
+    <line x1="310" y1="105" x2="310" y2="420"/>
+    <line x1="430" y1="105" x2="430" y2="420"/>
+    <line x1="550" y1="105" x2="550" y2="420"/>
+    <line x1="670" y1="105" x2="670" y2="420"/>
+    <line x1="790" y1="105" x2="790" y2="420"/>
+  </g>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12" fill="#6b7485" text-anchor="middle">
+    <text x="190" y="438">0</text><text x="310" y="438">10</text><text x="430" y="438">20</text>
+    <text x="550" y="438">30</text><text x="670" y="438">40</text><text x="790" y="438">50</text>
+  </g>
+
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" fill="#263044">
+    <text x="170" y="137" text-anchor="end">中位耗时</text>
+    <text x="170" y="217" text-anchor="end">平均耗时</text>
+    <text x="170" y="297" text-anchor="end">最小耗时</text>
+    <text x="170" y="377" text-anchor="end">最大耗时</text>
+  </g>
+
+  <g>
+    <rect x="190" y="115" width="407.35" height="22" rx="3" fill="#5470c6"/><rect x="190" y="143" width="257.65" height="22" rx="3" fill="#ee7d31"/>
+    <rect x="190" y="195" width="415.04" height="22" rx="3" fill="#5470c6"/><rect x="190" y="223" width="285.16" height="22" rx="3" fill="#ee7d31"/>
+    <rect x="190" y="275" width="362.21" height="22" rx="3" fill="#5470c6"/><rect x="190" y="303" width="227.99" height="22" rx="3" fill="#ee7d31"/>
+    <rect x="190" y="355" width="591.13" height="22" rx="3" fill="#5470c6"/><rect x="190" y="383" width="483.08" height="22" rx="3" fill="#ee7d31"/>
+  </g>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="12" font-weight="600">
+    <text x="605" y="131" fill="#3f5ca7">33.946</text><text x="455" y="159" fill="#c65d1d">21.471</text>
+    <text x="613" y="211" fill="#3f5ca7">34.587</text><text x="483" y="239" fill="#c65d1d">23.763</text>
+    <text x="560" y="291" fill="#3f5ca7">30.184</text><text x="426" y="319" fill="#c65d1d">18.999</text>
+    <text x="789" y="371" fill="#3f5ca7">49.261</text><text x="681" y="399" fill="#c65d1d">40.257</text>
+  </g>
+
+  <rect x="190" y="462" width="250" height="40" rx="8" fill="#eef3ff"/>
+  <text x="315" y="487" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="700" fill="#3657a7">中位耗时降低 36.7%</text>
+  <rect x="460" y="462" width="250" height="40" rx="8" fill="#fff1e8"/>
+  <text x="585" y="487" text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="15" font-weight="700" fill="#bd571a">年轻代 GC：9 次 → 7 次</text>
+</svg>
+

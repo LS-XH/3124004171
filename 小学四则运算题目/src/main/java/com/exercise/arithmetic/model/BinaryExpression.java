@@ -9,10 +9,25 @@ public final class BinaryExpression implements Expression {
     private final Fraction value;
 
     public BinaryExpression(Expression left, Operator operator, Expression right) {
+        this(left, operator, right, operator.apply(left.evaluate(), right.evaluate()));
+    }
+
+    private BinaryExpression(Expression left, Operator operator, Expression right, Fraction value) {
         this.left = Objects.requireNonNull(left, "left");
         this.operator = Objects.requireNonNull(operator, "operator");
         this.right = Objects.requireNonNull(right, "right");
-        this.value = operator.apply(left.evaluate(), right.evaluate());
+        this.value = Objects.requireNonNull(value, "value");
+    }
+
+    /**
+     * 生成器已经为约束检查计算过结果时复用该结果，避免除法等运算被执行两次。
+     */
+    public static BinaryExpression withPrecomputedValue(
+            Expression left,
+            Operator operator,
+            Expression right,
+            Fraction value) {
+        return new BinaryExpression(left, operator, right, value);
     }
 
     public Expression left() {

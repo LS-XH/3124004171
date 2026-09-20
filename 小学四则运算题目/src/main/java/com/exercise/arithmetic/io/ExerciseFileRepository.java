@@ -2,7 +2,6 @@ package com.exercise.arithmetic.io;
 
 import com.exercise.arithmetic.generator.Exercise;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,16 +17,23 @@ public final class ExerciseFileRepository {
         Path exercisePath = outputDirectory.resolve(EXERCISES_FILE_NAME);
         Path answerPath = outputDirectory.resolve(ANSWERS_FILE_NAME);
 
-        try (BufferedWriter exerciseWriter = Files.newBufferedWriter(exercisePath, StandardCharsets.UTF_8);
-             BufferedWriter answerWriter = Files.newBufferedWriter(answerPath, StandardCharsets.UTF_8)) {
-            for (Exercise exercise : exercises) {
-                exerciseWriter.write(exercise.number() + ". " + exercise.expression().format() + " =");
-                exerciseWriter.newLine();
-                answerWriter.write(exercise.number() + ". "
-                        + exercise.expression().evaluate().toDisplayString());
-                answerWriter.newLine();
-            }
+        String lineSeparator = System.lineSeparator();
+        StringBuilder exerciseContent = new StringBuilder(exercises.size() * 32);
+        StringBuilder answerContent = new StringBuilder(exercises.size() * 16);
+        for (Exercise exercise : exercises) {
+            exerciseContent.append(exercise.number())
+                    .append(". ")
+                    .append(exercise.expression().format())
+                    .append(" =")
+                    .append(lineSeparator);
+            answerContent.append(exercise.number())
+                    .append(". ")
+                    .append(exercise.expression().evaluate().toDisplayString())
+                    .append(lineSeparator);
         }
+        // 聚合后各写入一次，减少 10,000 道题场景中的重复 writer 调用。
+        Files.writeString(exercisePath, exerciseContent, StandardCharsets.UTF_8);
+        Files.writeString(answerPath, answerContent, StandardCharsets.UTF_8);
     }
 
     public List<String> readLines(Path path) throws IOException {
@@ -41,4 +47,3 @@ public final class ExerciseFileRepository {
                 StandardCharsets.UTF_8);
     }
 }
-
