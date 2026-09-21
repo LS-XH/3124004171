@@ -20,7 +20,7 @@
 - [x] 实现 Java 程序并补充设计实现过程
 - [x] 使用 JFR 进行效能分析与优化
 - [x] 完成测试并记录结果
-- [ ] 补充 PSP 实际耗时和项目总结
+- [x] 补充 PSP 实际耗时和项目总结
 
 ## 主要功能
 
@@ -34,15 +34,49 @@
 
 ## 使用方法
 
-运行环境要求：JDK 17 或更高版本。先在项目目录执行：
+### 使用 BAT 启动 JAR
+
+> [!CAUTION]
+>
+> 使用 BAT 需要计算机已安装 JDK 17 或更高版本并配置好 `PATH`；如果希望不安装 Java，请使用下方的 EXE 版本。
+
+项目根目录提供了 `Myapp.bat` 启动脚本。它会自动定位同目录下的 `Myapp.jar`，因此不需要再输入 `java -jar Myapp.jar`。先执行一次构建，然后在项目目录中直接输入 BAT 文件名和参数即可：
+
+**生成题目**：
 
 ```powershell
-.\build.ps1
+.\Myapp.bat -n 10 -r 10
 ```
 
-构建成功后，项目目录中会生成可执行文件 `Myapp.jar`。
+- `-n`：生成题目的数量。
+- `-r`：题目中数值的上限，不包含该上限；该参数必须提供。
 
-### 生成题目
+也可以使用省略 `-n`、批改答案和查看帮助等参数：
+
+```powershell
+.\Myapp.bat -r 10
+```
+
+**批改答案**：
+
+```powershell
+.\Myapp.bat -e .\Exercises.txt -a .\Answers.txt
+.\Myapp.bat --help
+```
+
+脚本支持把参数原样传递给程序，也可以从其他目录调用，例如：
+
+
+
+### 使用JAR
+
+> [!CAUTION]
+>
+> 运行环境要求：JDK 17 或更高版本。先在项目目录执行：`.\build.ps1`
+>
+> 构建成功后，项目目录中会生成可执行文件 `Myapp.jar`。
+
+**生成题目**：
 
 ```text
 java -jar Myapp.jar -n 10 -r 10
@@ -69,7 +103,7 @@ java -jar Myapp.jar -n 10 -r 10
 
 分数使用最简形式输出。假分数以带分数表示，例如二又八分之三输出为 `2’3/8`。
 
-### 批改答案
+**批改答案**：
 
 ```text
 java -jar Myapp.jar -e Exercises.txt -a Answers.txt
@@ -80,6 +114,68 @@ java -jar Myapp.jar -e Exercises.txt -a Answers.txt
 ```text
 Correct: 5 (1, 3, 5, 7, 9)
 Wrong: 5 (2, 4, 6, 8, 10)
+```
+
+### 使用EXE
+
+> [!CAUTION]
+>
+> 请先解压`dist\Myapp-windows-x64.zip`文件，以使用exe
+>
+> 然后直接使用 `dist\Myapp` 目录中的可执行文件。EXE 已包含裁剪后的 JRE，不需要另行安装 Java。
+
+生成 10 道数值小于 10 的题目：
+
+```powershell
+.\dist\Myapp\Myapp.exe -n 10 -r 10
+```
+
+省略 `-n` 时默认生成 10 道题：
+
+```powershell
+.\dist\Myapp\Myapp.exe -r 10
+```
+
+程序会在当前命令行目录生成：
+
+- `Exercises.txt`：题目文件；
+- `Answers.txt`：标准答案文件。
+
+批改指定的题目和答案：
+
+```powershell
+.\dist\Myapp\Myapp.exe -e .\Exercises.txt -a .\Answers.txt
+```
+
+批改结果会写入当前命令行目录的 `Grade.txt`。如果文件不在当前目录，可以使用绝对路径或相对路径：
+
+```powershell
+.\dist\Myapp\Myapp.exe -e "D:\Math\Exercises.txt" -a "D:\Math\StudentAnswers.txt"
+```
+
+查看帮助：
+
+```powershell
+.\dist\Myapp\Myapp.exe --help
+```
+
+### 打包 Windows EXE
+
+开发者在安装 JDK 17 的计算机上执行：
+
+```powershell
+.\package.ps1
+```
+
+打包结果位于：
+
+```text
+dist/
+├── Myapp/
+│   ├── Myapp.exe
+│   ├── app/
+│   └── runtime/
+└── Myapp-windows-x64.zip
 ```
 
 ## 设计实现过程
@@ -220,25 +316,25 @@ SUMMARY passed=14 failed=0 total=14 elapsed_ms=285.519
 
 ## PSP 2.1
 
-时间单位为分钟。预计耗时在编码前填写，实际耗时将在项目完成后根据开发记录补充。
+时间单位为分钟。实际耗时按开发、调试、文档整理和打包过程记录填写，并统一取整到 5 分钟。
 
 | PSP2.1                                  | Personal Software Process Stages         | 预计耗时（分钟） | 实际耗时（分钟） |
 | --------------------------------------- | ---------------------------------------- | ---------------: | ---------------: |
-| Planning                                | 计划                                     |               30 |                  |
-| · Estimate                              | · 估计这个任务需要多少时间               |               30 |                  |
-| Development                             | 开发                                     |              700 |                  |
-| · Analysis                              | · 需求分析（包括学习新技术）             |               60 |                  |
-| · Design Spec                           | · 生成设计文档                           |               70 |                  |
-| · Design Review                         | · 设计复审（和同事审核设计文档）         |               30 |                  |
-| · Coding Standard                       | · 代码规范（为目前的开发制定合适的规范） |               20 |                  |
-| · Design                                | · 具体设计                               |               60 |                  |
-| · Coding                                | · 具体编码                               |              260 |                  |
-| · Code Review                           | · 代码复审                               |               60 |                  |
-| · Test                                  | · 测试（自我测试、修改代码、提交修改）   |              140 |                  |
-| Reporting                               | 报告                                     |              210 |                  |
-| · Test Report                           | · 测试报告                               |               60 |                  |
-| · Size Measurement                      | · 计算工作量                             |               30 |                  |
-| · Postmortem & Process Improvement Plan | · 事后总结，并提出过程改进计划           |              120 |                  |
-| **合计**                                |                                          |          **940** |             **** |
+| Planning                                | 计划                                     |               30 |               35 |
+| · Estimate                              | · 估计这个任务需要多少时间               |               30 |               35 |
+| Development                             | 开发                                     |              700 |              680 |
+| · Analysis                              | · 需求分析（包括学习新技术）             |               60 |               50 |
+| · Design Spec                           | · 生成设计文档                           |               70 |               55 |
+| · Design Review                         | · 设计复审（和同事审核设计文档）         |               30 |               25 |
+| · Coding Standard                       | · 代码规范（为目前的开发制定合适的规范） |               20 |               15 |
+| · Design                                | · 具体设计                               |               60 |               50 |
+| · Coding                                | · 具体编码                               |              260 |              250 |
+| · Code Review                           | · 代码复审                               |               60 |               45 |
+| · Test                                  | · 测试（自我测试、修改代码、提交修改）   |              140 |              190 |
+| Reporting                               | 报告                                     |              210 |              160 |
+| · Test Report                           | · 测试报告                               |               60 |               50 |
+| · Size Measurement                      | · 计算工作量                             |               30 |               20 |
+| · Postmortem & Process Improvement Plan | · 事后总结，并提出过程改进计划           |              120 |               90 |
+| **合计**                                |                                          |          **940** |          **875** |
 
 开发过程中的需求分析、架构设计、算法方案、测试计划和效能分析计划记录在[项目设计与开发计划](docs/项目设计与开发计划.md)中。
