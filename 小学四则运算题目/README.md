@@ -11,7 +11,7 @@
 | 课程作业        | 软件工程——自动生成小学四则运算题目的命令行程序               |
 | 开发语言        | Java                                                         |
 | 成员 1          | 李文争    3124004171                                         |
-| 成员 2          |                                                              |
+| 成员 2          | 陈卓浩    3124004162                                         |
 | GitHub 项目地址 | https://github.com/LS-XH/3124004171/tree/main/%E5%B0%8F%E5%AD%A6%E5%9B%9B%E5%88%99%E8%BF%90%E7%AE%97%E9%A2%98%E7%9B%AE |
 
 ## 项目状态
@@ -180,21 +180,83 @@ dist/
 
 ## 设计实现过程
 
-程序按照“命令行入口—业务服务—表达式模型—文件读写”组织，各部分职责如下：
+### 1. 总体组织
 
-| 模块 | 主要职责 |
-| --- | --- |
-| `Main`、`CommandLineOptions` | 解析参数，区分题目生成和答案批改模式，统一处理错误信息 |
-| `Fraction` | 使用 `BigInteger` 保存并约分分数，完成无精度损失的四则运算 |
-| `Expression` 及其实现类 | 使用二叉树表示数值和运算节点，负责求值、格式化和生成判重键 |
-| `ExerciseGenerator` | 随机构造 1～3 个运算符的表达式，并检查减法、除法和重复题目约束 |
-| `ExpressionParser` | 使用递归下降法解析自然数、分数、带分数、括号和四则运算 |
-| `ExerciseService`、`GradingService` | 组织题目生成、答案计算和正误统计流程 |
-| `ExerciseFileRepository` | 使用 UTF-8 读写 `Exercises.txt`、`Answers.txt` 和 `Grade.txt` |
+项目共有 17 个 Java 源文件，按照“命令行入口—业务服务—表达式模型—解析与文件读写”分层组织。各层只依赖下一层的职责接口，避免把参数解析、随机生成、数学计算和文件格式处理混写在一个类中。
+
+```text
+Main
+├── cli.CommandLineOptions                 参数解析与模式校验
+├── service.ExerciseService                生成流程编排
+│   └── generator.ExerciseGenerator       随机表达式生成与判重
+├── service.GradingService                 批改流程编排
+│   └── parser.ExpressionParser            表达式/答案解析
+├── model.Expression                       表达式抽象
+│   ├── NumberExpression                   数值叶子节点
+│   └── BinaryExpression                   运算二叉树节点
+├── model.Fraction、Operator                精确分数运算与运算符
+└── io.ExerciseFileRepository              UTF-8 文件读写
+```
+
+### 2. 类和函数职责
+
+| 类或接口 | 类型 | 关键函数 | 作用 |
+| --- | --- | --- | --- |
+| `Main` | 程序入口 | `main`、`run` | 创建依赖对象，按照命令行模式调用生成或批改服务，并统一处理异常和退出码 |
+| `CommandLineOptions` | 参数对象 | `parse` | 解析 `-n`、`-r`、`-e`、`-a`、`--help`，校验参数组合和正整数 |
+| `ExerciseService` | 服务类 | `generateAndWrite` | 调用生成器获得题目，再交给仓储一次性写入题目和答案 |
+| `ExerciseGenerator` | 生成器 | `generate`、`generateExpression`、`generateNumber` | 随机构造 0～3 个运算符的表达式，检查减法、除法、范围、唯一性等约束 |
+| `Expression` | 接口 | `evaluate`、`format`、`canonicalKey` | 统一表达式节点的求值、显示、运算符计数和判重键操作 |
+| `NumberExpression` | 模型类 | `evaluate`、`format` | 表示表达式树中的数值叶子节点 |
+| `BinaryExpression` | 模型类 | `evaluate`、`format`、`canonicalKey` | 表示左右子树和一个运算符，负责优先级括号和交换等价判重 |
+| `Fraction` | 值对象 | `add`、`subtract`、`multiply`、`divide`、`toDisplayString` | 用 `BigInteger` 保存最简分数，避免浮点误差，并按题目格式输出自然数、真分数和带分数 |
+| `ExpressionParser` | 解析器 | `parse`、`parseFraction` | 使用递归下降法解析括号、四则运算和分数文本 |
+| `GradingService` | 服务类 | `grade` | 读取题目与作答，解析并精确比较答案，收集正确和错误编号 |
+| `ExerciseFileRepository` | 仓储类 | `writeGeneratedFiles`、`readLines`、`writeGrade` | 负责 `Exercises.txt`、`Answers.txt`、`Grade.txt` 的 UTF-8 读写 |
+| `GradeResult`、`Exercise` | record | `format`、访问器 | 封装批改统计结果和带编号题目，减少流程类中的可变状态 |
+| `Operator` | enum | `apply`、`precedence` | 集中定义四种运算符的符号、优先级、交换性和计算行为 |
+
+异常类 `UserInputException`、`ExpressionParseException` 和 `ExerciseGenerationException` 分别表示参数错误、表达式格式错误和生成失败，使 `Main` 可以给出清晰的错误提示。
+
+### 3. 模块之间的关系
+
+程序启动后，`Main.run` 先调用 `CommandLineOptions.parse` 得到不可变参数对象。生成模式下，`ExerciseService` 调用 `ExerciseGenerator.generate`；生成器返回的每个 `Exercise` 内部持有一棵 `Expression` 二叉树，表达式节点通过 `Fraction` 计算答案。服务最后调用 `ExerciseFileRepository.writeGeneratedFiles` 输出两个文件。
+
+批改模式下，`GradingService` 通过仓储读取文本，使用 `ExpressionParser` 解析题目表达式和答案分数，再调用 `Fraction.equals` 比较；统计结果由 `GradeResult.format` 格式化后写入 `Grade.txt`。因此，文件格式变化只影响仓储和解析器，不会影响分数算法和题目生成器。
+
+### 4. 关键算法实现
+
+题目生成采用递归构造表达式树。叶子节点在 `[0, range)` 中生成自然数或合法分数；内部节点随机选择运算符。每个候选节点立即计算左右子树的值：减法要求左值不小于右值，除法要求除数非零且商为真分数，不满足约束的候选直接重试。表达式的 `canonicalKey` 对加法和乘法的左右子树键排序，对减法和除法保留左右顺序，再用 `HashSet` 判断同一次运行中的交换等价重复题目。
+
+`ExpressionParser` 按“加减层—乘除层—基本项层”递归下降，天然实现运算优先级；`BinaryExpression.format` 根据子树优先级补充必要括号，保证输出文本重新解析后含义不变。
+
+### 5. 关键流程图
+
+生成和批改是最容易出现边界错误的流程，因此绘制流程图比只描述类关系更直观。以下 Mermaid 图可在 GitHub 或支持 Mermaid 的 Markdown 查看器中渲染。
+
+```mermaid
+flowchart TD
+    A[读取命令行参数] --> B{参数模式}
+    B -->|生成| C[随机选择运算符数量 0~3]
+    C --> D[递归生成表达式树]
+    D --> E{减法/除法约束合法?}
+    E -->|否| D
+    E -->|是| F[计算规范化键]
+    F --> G{HashSet 中已存在?}
+    G -->|是| C
+    G -->|否| H{达到题目数量?}
+    H -->|否| C
+    H -->|是| I[写入 Exercises.txt 和 Answers.txt]
+    B -->|批改| J[读取题目和答案文件]
+    J --> K[递归解析表达式与分数]
+    K --> L[精确计算并比较答案]
+    L --> M[统计正确/错误编号]
+    M --> N[写入 Grade.txt]
+```
 
 题目生成过程如下：
 
-1. 在 1～3 范围内随机确定运算符数量，递归构造表达式二叉树。
+1. 在 0～3 范围内随机确定运算符数量，递归构造表达式二叉树。
 2. 每生成一个运算节点就计算左右子树结果。减法只接受左值不小于右值的情况；除法只接受除数非零且商为真分数的情况。
 3. 为表达式生成规范化键。加法和乘法节点将左右子树键按固定顺序排列，减法和除法保持原顺序，从而识别题目要求中的交换等价表达式。
 4. 使用 `HashSet` 保存规范化键，重复题目重新生成；达到指定数量后写出题目和标准答案。
@@ -202,6 +264,127 @@ dist/
 批改时，程序从题目行中提取表达式并重新解析、精确求值，再与答案文件中相同编号的答案比较。答案缺失或内容无法解析时，该题计入错误。关键约束、判重和容错位置均在源代码中保留了解释性注释。
 
 更详细的需求、算法和流程图见[项目设计与开发计划](docs/项目设计与开发计划.md)。
+
+## 代码说明
+
+下面列出项目中最能体现核心设计的代码片段。完整实现位于 `src/main/java`，此处只展示关键逻辑，便于阅读和维护。
+
+### 1. 命令行入口与异常处理
+
+`Main.run` 不直接实现生成算法，而是负责组装对象和分派模式。这样可以让生成、批改逻辑脱离控制台，测试时也能直接传入参数和临时工作目录。
+
+```java
+CommandLineOptions options = CommandLineOptions.parse(args);
+if (options.mode() == CommandLineOptions.Mode.GENERATE) {
+    ExerciseService service = new ExerciseService(
+            new ExerciseGenerator(), repository);
+    service.generateAndWrite(
+            options.exerciseCount(), options.range(), workingDirectory);
+} else {
+    GradingService service = new GradingService(repository);
+    GradeResult result = service.grade(
+            options.exerciseFile(), options.answerFile(), workingDirectory);
+    out.print(result.format());
+}
+```
+
+参数格式错误、文件读写错误和算术错误分别捕获并转换为不同的退出码，同时输出帮助信息，避免把 Java 异常堆栈直接暴露给使用者。
+
+### 2. 生成表达式并保证题目约束
+
+`ExerciseGenerator.generateExpression` 递归构造表达式树。每次创建二叉节点后立即计算左右值，并在返回前验证减法和除法规则；注释说明了交换子树和复用计算结果的优化原因。
+
+```java
+Fraction leftValue = left.evaluate();
+Fraction rightValue = right.evaluate();
+
+// 减法必须保证结果非负；交换子树比丢弃整棵候选树更高效。
+if (operator == Operator.SUBTRACT
+        && leftValue.compareTo(rightValue) < 0) {
+    Expression expression = left;
+    left = right;
+    right = expression;
+    Fraction value = leftValue;
+    leftValue = rightValue;
+    rightValue = value;
+}
+
+if (operator == Operator.DIVIDE) {
+    // 除数不能为 0，且商必须是真分数。
+    if (leftValue.isZero() || rightValue.isZero()
+            || leftValue.equals(rightValue)) {
+        return null;
+    }
+    if (leftValue.compareTo(rightValue) > 0) {
+        // 让较小的数作为被除数，保证结果小于 1。
+        Expression expression = left;
+        left = right;
+        right = expression;
+    }
+}
+
+Fraction result = operator.apply(leftValue, rightValue);
+return BinaryExpression.withPrecomputedValue(
+        left, operator, right, result);
+```
+
+生成完成后，程序使用 `HashSet<String>` 保存规范化键。键已存在时丢弃候选题，确保同一次运行中不存在交换等价的重复题目。
+
+### 3. 加法和乘法的规范化判重
+
+`BinaryExpression.canonicalKey` 只对当前节点的加法或乘法交换左右键，不展平整棵树。因此既能识别 `23 + 45` 与 `45 + 23`，又能保留不同结合结构的区别。
+
+```java
+String leftKey = left.canonicalKey();
+String rightKey = right.canonicalKey();
+
+// + 和 × 满足交换律，固定较小键在前，消除左右交换造成的重复。
+if (operator.isCommutative()
+        && leftKey.compareTo(rightKey) > 0) {
+    String temporary = leftKey;
+    leftKey = rightKey;
+    rightKey = temporary;
+}
+return operator.name() + "(" + leftKey + "," + rightKey + ")";
+```
+
+减法和除法不进入交换分支，括号结构也保留在表达式树中，符合题目对等价题目的定义。
+
+### 4. 使用分数对象进行精确计算
+
+`Fraction` 内部使用 `BigInteger` 保存分子和分母，并在构造时约分。下面的除法实现通过交叉相乘构造新分数，不进行 `double` 转换，因此不会产生浮点误差。
+
+```java
+public Fraction divide(Fraction other) {
+    if (other.isZero()) {
+        throw new ArithmeticException("除数不能为 0");
+    }
+    return new Fraction(
+            numerator.multiply(other.denominator),
+            denominator.multiply(other.numerator));
+}
+```
+
+`toDisplayString` 再把最简分数转换为自然数、真分数或带分数格式，保证输出文件与题目要求一致。
+
+### 5. 文件输出与职责隔离
+
+`ExerciseFileRepository` 统一负责 UTF-8 文件操作，服务层只传入题目集合和输出目录。题目、答案先用 `StringBuilder` 组装，再分别写入文件，减少大量小写入操作。
+
+```java
+StringBuilder exercisesText = new StringBuilder();
+StringBuilder answersText = new StringBuilder();
+for (Exercise exercise : exercises) {
+    exercisesText.append(exercise.number())
+            .append(". ").append(exercise.expression().format())
+            .append(" =\n");
+    answersText.append(exercise.number())
+            .append(". ").append(exercise.expression().evaluate().toDisplayString())
+            .append('\n');
+}
+Files.writeString(exercisesPath, exercisesText.toString(), UTF_8);
+Files.writeString(answersPath, answersText.toString(), UTF_8);
+```
 
 ## 效能分析与改进
 
@@ -338,3 +521,20 @@ SUMMARY passed=14 failed=0 total=14 elapsed_ms=285.519
 | **合计**                                |                                          |          **940** |          **875** |
 
 开发过程中的需求分析、架构设计、算法方案、测试计划和效能分析计划记录在[项目设计与开发计划](docs/项目设计与开发计划.md)中。
+
+## 项目小结
+
+### 1. 成果、得失与经验
+
+本项目最终完成了题目生成、标准答案计算、答案批改、文件输出、10,000 道题规模支持和 Windows EXE 打包等功能。实现过程中最重要的设计决策是使用表达式二叉树和 `Fraction` 值对象：前者让括号、优先级和交换等价判重有明确的数据结构，后者避免了浮点数计算带来的误差。通过 JFR 定位热点后，又对自然数分数对象、失败重试、结果缓存和批量文件写入进行了优化，性能和可维护性都有所提升。
+
+项目做得较好的地方是分层比较清晰，生成、解析、批改和文件读写可以分别测试；测试也覆盖了正常输入、边界值、非法表达式、重复题目和一万道题的规模场景。相对不足的是，早期主要关注核心算法，命令行提示、打包方式和 README 结构是在后期逐步补充的，导致文档和使用入口经历了几次调整；部分随机生成约束在范围较小时候选空间有限，也需要设置重试上限并给出错误提示。
+
+本次项目的主要经验是：第一，应先把自然语言需求转换成可验证的不变量，例如“减法节点左值不小于右值”“除法结果是真分数”“规范键唯一”；第二，涉及分数时应从一开始就使用精确表示，而不是先用浮点数再修正；第三，生成器、解析器和批改器都应尽早准备固定种子和小规模测试，避免最后才发现边界问题；第四，性能优化必须先测量再修改，JFR 采样和优化前后对比比凭感觉改代码更可靠。
+
+### 2. 结对感受
+
+结对开发让需求理解、代码实现和结果检查形成了连续的反馈。一个人负责实现或修改时，另一人可以从作业条款、用户使用方式和异常情况重新审视结果，减少“代码能运行但没有完全满足要求”的情况。通过共同讨论表达式判重和除法约束，我们也更清楚地认识到，算法正确性不仅要看最终答案，还要检查表达式树中间节点的状态。
+
+结对过程中的不足是前期任务拆分和同步节奏还可以更明确：如果能在开始时就约定接口、提交粒度和验收清单，后期整合 README、JFR 结果和 EXE 使用说明会更高效。今后可以采用“先写接口和测试，再并行实现，最后做一次联合演示”的方式，减少重复修改。
+
